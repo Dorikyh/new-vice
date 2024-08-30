@@ -1,0 +1,46 @@
+body, html {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  background-color: #1c771c;
+}
+
+.mesa {
+  border: 15px solid #8b5e3c; /* Borde de la mesa */
+  border-radius: 10px;
+  background-color: #1c771c; /* Color del tapete */
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* Sombra para dar profundidad */
+  object-fit: contain;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+  max-width: 100vw;
+  max-height: 100vh;
+  object-fit: contain;
+}
+
+.indicator {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.animation {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 48px;
+  color: yellow;
+  font-weight: bold;
+  opacity: 0;
+  transition: opacity 0.5s ease-out;
+}
