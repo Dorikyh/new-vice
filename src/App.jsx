@@ -218,7 +218,7 @@ export default function App() {
           min="1"
           max="1000"
           value={cuePower}
-          onChange={(e) => setCuePower(Number(e.target.value))}
+          onChange={(e) =>  setCuePower(Number(e.target.value))}
         />
         <p>Potencia actual: {cuePower}</p>
       </div>
