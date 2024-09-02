@@ -1,6 +1,4 @@
 body, html {
-  margin: 0;
-  padding: 0;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -9,18 +7,18 @@ body, html {
 }
 
 .mesa {
-  border: 15px solid #8b5e3c; /* Borde de la mesa */
-  border-radius: 10px;
+  border: 8px solid #8b5e3c; /* Borde de la mesa */
+  border-radius: 5px;
   background-color: #1c771c; /* Color del tapete */
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* Sombra para dar profundidad */
-  object-fit: contain;
+  width: 1/2;  /* Ancho fijo de la mesa */
+  height: 1/2; /* Alto fijo de la mesa */
+  position: relative; /* Para que los elementos hijos, como indicadores o animaciones, puedan posicionarse dentro de la mesa */
 }
 
 canvas {
   width: 100%;
   height: 100%;
-  max-width: 100vw;
-  max-height: 100vh;
   object-fit: contain;
 }
 

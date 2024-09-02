@@ -4,14 +4,20 @@ import './App.css';
 export default function App() {
   const canvasRef = useRef(null);
   const [caromCount, setCaromCount] = useState(0);
-  const [cuePower, setCuePower] = useState(10); // Initial cue power
+  const [cuePower, setCuePower] = useState(20); // Initial cue power
+
+  const MAX_WIDTH = 800; // Tamaño máximo en píxeles
+  const MAX_HEIGHT = 400; // Tamaño máximo en píxeles
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
-    canvas.width = window.innerWidth * 0.9;
-    canvas.height = canvas.width / 2;
+    // Ajustar tamaño del canvas con límites máximos
+    const canvasWidth = Math.min(window.innerWidth * 0.9, MAX_WIDTH);
+    const canvasHeight = Math.min(canvasWidth / 2, MAX_HEIGHT);
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
 
     const balls = [
       { x: 100, y: 100, radius: 10, color: 'white', vx: 0, vy: 0 },
@@ -31,24 +37,25 @@ export default function App() {
       return balls.every(ball => ball.vx === 0 && ball.vy === 0);
     }
 
-    canvas.addEventListener('mousedown', () => {
+    function handleStart(event) {
       if (areAllBallsStationary()) {
         cue.isShooting = true;
       }
-    });
+    }
 
-    canvas.addEventListener('mouseup', () => {
+    function handleEnd(event) {
       if (cue.isShooting && areAllBallsStationary()) {
         cue.isShooting = false;
 
-        balls[0].vx = Math.cos(cue.angle) * cue.power;
-        balls[0].vy = Math.sin(cue.angle) * cue.power;
+        // Invertir la dirección del disparo
+        balls[0].vx = -Math.cos(cue.angle) * cue.power; // Notar el signo negativo
+        balls[0].vy = -Math.sin(cue.angle) * cue.power; // Notar el signo negativo
 
-        cue.power = cuePower; // Reset power to initial value
+        cue.power = cuePower; // Reiniciar la potencia al valor inicial
       }
-    });
+    }
 
-    canvas.addEventListener('mousemove', (event) => {
+    function handleMove(event) {
       if (cue.isShooting && isWhiteBallStationary()) {
         const rect = canvas.getBoundingClientRect();
         const mouseX = event.clientX - rect.left;
@@ -61,7 +68,23 @@ export default function App() {
         // Ensure cue power does not exceed maximum value
         cue.power = Math.min(Math.sqrt(dx * dx + dy * dy) * 0.1, cuePower); // Adjusted max power limit
       }
-    });
+    }
+
+    function handleMouseMove(event) {
+      handleMove(event);
+    }
+
+    function handleTouchMove(event) {
+      handleMove(event);
+    }
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleEnd);
+    window.addEventListener('touchmove', handleTouchMove);
+    window.addEventListener('touchend', handleEnd);
+
+    canvas.addEventListener('mousedown', handleStart);
+    canvas.addEventListener('touchstart', handleStart);
 
     function detectCollision(ball1, ball2) {
       const dx = ball1.x - ball2.x;
@@ -105,19 +128,17 @@ export default function App() {
     }
 
     function update() {
-      bandsTouched.clear();
-      ballsHit.clear();
-
       balls.forEach(ball => {
         ball.x += ball.vx;
         ball.y += ball.vy;
 
-        ball.vx *= 0.99;
+        ball.vx *= 0.99; // Freno
         ball.vy *= 0.99;
 
         if (Math.abs(ball.vx) < 0.01) ball.vx = 0;
         if (Math.abs(ball.vy) < 0.01) ball.vy = 0;
 
+        // Detectar colisiones con bandas
         if (ball.x + ball.radius > canvas.width) {
           ball.x = canvas.width - ball.radius;
           ball.vx = -ball.vx * 0.9;
@@ -140,6 +161,7 @@ export default function App() {
         }
       });
 
+      // Detectar colisiones entre bolas
       for (let i = 0; i < balls.length; i++) {
         for (let j = i + 1; j < balls.length; j++) {
           if (detectCollision(balls[i], balls[j])) {
@@ -151,8 +173,12 @@ export default function App() {
         }
       }
 
-      if (balls[0].vx === 0 && balls[0].vy === 0 && bandsTouched.size >= 3 && ballsHit.size >= 1) {
-        setCaromCount(prevCount => prevCount + 1);
+      // Comprobar si la bola blanca se ha detenido completamente
+      if (isWhiteBallStationary()) {
+        if (bandsTouched.size >= 3 && ballsHit.size >= 1) {
+          setCaromCount(prevCount => prevCount + 1);
+        }
+        // Reiniciar las listas de bandas tocadas y bolas golpeadas después de una carambola
         bandsTouched.clear();
         ballsHit.clear();
       }
@@ -181,47 +207,39 @@ export default function App() {
       if (cue.isShooting && isWhiteBallStationary()) {
         ctx.beginPath();
         ctx.moveTo(balls[0].x, balls[0].y);
+
+        // Invertir la dirección de la línea de dirección del disparo
         ctx.lineTo(
-          balls[0].x + Math.cos(cue.angle) * cue.power * 10,
-          balls[0].y + Math.sin(cue.angle) * cue.power * 10
+          balls[0].x - Math.cos(cue.angle) * cue.power * 10, // Notar el signo negativo
+          balls[0].y - Math.sin(cue.angle) * cue.power * 10  // Notar el signo negativo
         );
         ctx.strokeStyle = 'white';
         ctx.lineWidth = 2;
         ctx.stroke();
+        ctx.closePath();
       }
 
-      ctx.fillStyle = 'white';
-      ctx.font = '24px Arial';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'top';
-      ctx.fillText(`Carambolas: ${caromCount}`, 10, 10);
-    }
-
-    function gameLoop() {
       update();
-      draw();
-      requestAnimationFrame(gameLoop);
+      requestAnimationFrame(draw);
     }
 
-    gameLoop();
-  }, [caromCount, cuePower]);
+    draw();
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleEnd);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleEnd);
+
+      canvas.removeEventListener('mousedown', handleStart);
+      canvas.removeEventListener('touchstart', handleStart);
+    };
+  }, [cuePower]);
 
   return (
-    <main>
-      <h1>Billar Tres Bandas</h1>
-      <canvas className='mesa' ref={canvasRef}></canvas>
-      <div className="controls">
-        <label htmlFor="power">Potencia del Tiro:</label>
-        <input
-          id="power"
-          type="range"
-          min="1"
-          max="1000"
-          value={cuePower}
-          onChange={(e) =>  setCuePower(Number(e.target.value))}
-        />
-        <p>Potencia actual: {cuePower}</p>
-      </div>
-    </main>
+    <div className="App">
+      <p>Carambolas: {caromCount}</p>
+      <canvas ref={canvasRef}></canvas>
+    </div>
   );
 }
