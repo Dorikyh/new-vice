@@ -48,8 +48,8 @@ export default function App() {
         cue.isShooting = false;
 
         // Invertir la dirección del disparo
-        balls[0].vx = -Math.cos(cue.angle) * cue.power; // Notar el signo negativo
-        balls[0].vy = -Math.sin(cue.angle) * cue.power; // Notar el signo negativo
+        balls[0].vx = -Math.cos(cue.angle) * cue.power; // Inversión de la dirección
+        balls[0].vy = -Math.sin(cue.angle) * cue.power; // Inversión de la dirección
 
         cue.power = cuePower; // Reiniciar la potencia al valor inicial
       }
@@ -65,8 +65,8 @@ export default function App() {
         const dy = mouseY - balls[0].y;
         cue.angle = Math.atan2(dy, dx);
 
-        // Ensure cue power does not exceed maximum value
-        cue.power = Math.min(Math.sqrt(dx * dx + dy * dy) * 0.1, cuePower); // Adjusted max power limit
+        // Asegurarse de que la potencia del taco no exceda el valor máximo
+        cue.power = Math.min(Math.sqrt(dx * dx + dy * dy) * 0.1, cuePower); // Límite máximo de potencia ajustado
       }
     }
 
@@ -210,8 +210,8 @@ export default function App() {
 
         // Invertir la dirección de la línea de dirección del disparo
         ctx.lineTo(
-          balls[0].x - Math.cos(cue.angle) * cue.power * 10, // Notar el signo negativo
-          balls[0].y - Math.sin(cue.angle) * cue.power * 10  // Notar el signo negativo
+          balls[0].x - Math.cos(cue.angle) * cue.power * 10, // Inversión de la dirección
+          balls[0].y - Math.sin(cue.angle) * cue.power * 10  // Inversión de la dirección
         );
         ctx.strokeStyle = 'white';
         ctx.lineWidth = 2;
@@ -230,7 +230,6 @@ export default function App() {
       window.removeEventListener('mouseup', handleEnd);
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleEnd);
-
       canvas.removeEventListener('mousedown', handleStart);
       canvas.removeEventListener('touchstart', handleStart);
     };
@@ -238,8 +237,18 @@ export default function App() {
 
   return (
     <div className="App">
-      <p>Carambolas: {caromCount}</p>
-      <canvas ref={canvasRef}></canvas>
+      <h1>Carambolas: {caromCount}</h1>
+      <canvas ref={canvasRef} style={{ border: '2px solid black' }} />
+      <div>
+        <input
+          type="range"
+          id="cuePower"
+          min="5"
+          max="50"
+          value={cuePower}
+          onChange={(e) => setCuePower(parseInt(e.target.value))}
+        />
+      </div>
     </div>
   );
 }
