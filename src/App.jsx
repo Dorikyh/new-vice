@@ -70,21 +70,37 @@ export default function App() {
       }
     }
 
-    function handleMouseMove(event) {
-      handleMove(event);
-    }
-
     function handleTouchMove(event) {
-      handleMove(event);
+      if (cue.isShooting && isWhiteBallStationary()) {
+        event.preventDefault(); // Prevenir el comportamiento de scroll en dispositivos móviles
+        const rect = canvas.getBoundingClientRect();
+        const touch = event.touches[0];
+        const mouseX = touch.clientX - rect.left;
+        const mouseY = touch.clientY - rect.top;
+
+        const dx = mouseX - balls[0].x;
+        const dy = mouseY - balls[0].y;
+        cue.angle = Math.atan2(dy, dx);
+
+        // Asegurarse de que la potencia del taco no exceda el valor máximo
+        cue.power = Math.min(Math.sqrt(dx * dx + dy * dy) * 0.1, cuePower);
+      }
     }
 
-    window.addEventListener('mousemove', handleMouseMove);
+    function handleTouchStart(event) {
+      event.preventDefault(); // Prevenir el comportamiento de scroll en dispositivos móviles
+      if (areAllBallsStationary()) {
+        cue.isShooting = true;
+      }
+    }
+
+    window.addEventListener('mousemove', handleMove);
     window.addEventListener('mouseup', handleEnd);
     window.addEventListener('touchmove', handleTouchMove);
     window.addEventListener('touchend', handleEnd);
 
     canvas.addEventListener('mousedown', handleStart);
-    canvas.addEventListener('touchstart', handleStart);
+    canvas.addEventListener('touchstart', handleTouchStart);
 
     function detectCollision(ball1, ball2) {
       const dx = ball1.x - ball2.x;
@@ -182,73 +198,64 @@ export default function App() {
         bandsTouched.clear();
         ballsHit.clear();
       }
-    }
 
-    function drawTable() {
-      ctx.fillStyle = '#175f17';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-
-    function drawBall(ball) {
-      ctx.beginPath();
-      ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-      ctx.fillStyle = ball.color;
-      ctx.fill();
-      ctx.closePath();
-    }
-
-    function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      drawTable();
+      // Dibujar bolas
+      balls.forEach(ball => {
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+        ctx.fillStyle = ball.color;
+        ctx.fill();
+        ctx.closePath();
+      });
 
-      balls.forEach(ball => drawBall(ball));
+      // Dibujar el palito de dirección
+      if (cue.isShooting) {
+        const arrowLength = 100;
+        const arrowEndX = balls[0].x - Math.cos(cue.angle) * arrowLength; // Invertir dirección
+        const arrowEndY = balls[0].y - Math.sin(cue.angle) * arrowLength; // Invertir dirección
 
-      if (cue.isShooting && isWhiteBallStationary()) {
         ctx.beginPath();
         ctx.moveTo(balls[0].x, balls[0].y);
-
-        // Invertir la dirección de la línea de dirección del disparo
-        ctx.lineTo(
-          balls[0].x - Math.cos(cue.angle) * cue.power * 10, // Inversión de la dirección
-          balls[0].y - Math.sin(cue.angle) * cue.power * 10  // Inversión de la dirección
-        );
-        ctx.strokeStyle = 'white';
+        ctx.lineTo(arrowEndX, arrowEndY);
+        ctx.strokeStyle = 'black';
         ctx.lineWidth = 2;
         ctx.stroke();
         ctx.closePath();
       }
 
-      update();
-      requestAnimationFrame(draw);
+      requestAnimationFrame(update);
     }
 
-    draw();
+    update();
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mousemove', handleMove);
       window.removeEventListener('mouseup', handleEnd);
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleEnd);
       canvas.removeEventListener('mousedown', handleStart);
-      canvas.removeEventListener('touchstart', handleStart);
+      canvas.removeEventListener('touchstart', handleTouchStart);
     };
   }, [cuePower]);
 
   return (
     <div className="App">
-      <h1>Carambolas: {caromCount}</h1>
-      <canvas ref={canvasRef} style={{ border: '2px solid black' }} />
+      <canvas ref={canvasRef} style={{ border: '1px solid black' }}></canvas>
       <div>
-        <input
-          type="range"
-          id="cuePower"
-          min="5"
-          max="50"
-          value={cuePower}
-          onChange={(e) => setCuePower(parseInt(e.target.value))}
-        />
+        <label>
+          Fuerza:
+          <input
+            type="range"
+            min="10"
+            max="50"
+            value={cuePower}
+            onChange={(e) => setCuePower(Number(e.target.value))}
+          />
+        </label>
       </div>
+      <p>Caroms: {caromCount}</p>
     </div>
   );
 }
