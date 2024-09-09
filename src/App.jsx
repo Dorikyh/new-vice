@@ -6,14 +6,30 @@ export default function App() {
   const [caromCount, setCaromCount] = useState(0);
   const [cuePower, setCuePower] = useState(20); // Initial cue power
 
-  const MAX_WIDTH = 800; // Tamaño máximo en píxeles
-  const MAX_HEIGHT = 400; // Tamaño máximo en píxeles
+  const MAX_WIDTH = 800; // TamaÃ±o mÃ¡ximo en pÃ­xeles
+  const MAX_HEIGHT = 400; // TamaÃ±o mÃ¡ximo en pÃ­xeles
+
+  // Usamos refs para guardar los colores actuales de las bandas
+  const borderColor = useRef({
+    top: '#8b5e3c',
+    bottom: '#8b5e3c',
+    left: '#8b5e3c',
+    right: '#8b5e3c',
+  });
+
+  // Usamos refs para rastrear cuÃ¡ndo cada borde debe cambiar de color
+  const borderTimeouts = useRef({
+    top: null,
+    bottom: null,
+    left: null,
+    right: null,
+  });
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
-    // Ajustar tamaño del canvas con límites máximos
+    // Ajustar tamaÃ±o del canvas con lÃ­mites mÃ¡ximos
     const canvasWidth = Math.min(window.innerWidth * 0.9, MAX_WIDTH);
     const canvasHeight = Math.min(canvasWidth / 2, MAX_HEIGHT);
     canvas.width = canvasWidth;
@@ -47,9 +63,9 @@ export default function App() {
       if (cue.isShooting && areAllBallsStationary()) {
         cue.isShooting = false;
 
-        // Invertir la dirección del disparo
-        balls[0].vx = -Math.cos(cue.angle) * cue.power; // Inversión de la dirección
-        balls[0].vy = -Math.sin(cue.angle) * cue.power; // Inversión de la dirección
+        // Invertir la direcciÃ³n del disparo
+        balls[0].vx = -Math.cos(cue.angle) * cue.power; // InversiÃ³n de la direcciÃ³n
+        balls[0].vy = -Math.sin(cue.angle) * cue.power; // InversiÃ³n de la direcciÃ³n
 
         cue.power = cuePower; // Reiniciar la potencia al valor inicial
       }
@@ -65,14 +81,14 @@ export default function App() {
         const dy = mouseY - balls[0].y;
         cue.angle = Math.atan2(dy, dx);
 
-        // Asegurarse de que la potencia del taco no exceda el valor máximo
-        cue.power = Math.min(Math.sqrt(dx * dx + dy * dy) * 0.1, cuePower); // Límite máximo de potencia ajustado
+        // Asegurarse de que la potencia del taco no exceda el valor mÃ¡ximo
+        cue.power = Math.min(Math.sqrt(dx * dx + dy * dy) * 0.1, cuePower); // LÃ­mite mÃ¡ximo de potencia ajustado
       }
     }
 
     function handleTouchMove(event) {
       if (cue.isShooting && isWhiteBallStationary()) {
-        event.preventDefault(); // Prevenir el comportamiento de scroll en dispositivos móviles
+        event.preventDefault(); // Prevenir el comportamiento de scroll en dispositivos mÃ³viles
         const rect = canvas.getBoundingClientRect();
         const touch = event.touches[0];
         const mouseX = touch.clientX - rect.left;
@@ -82,13 +98,13 @@ export default function App() {
         const dy = mouseY - balls[0].y;
         cue.angle = Math.atan2(dy, dx);
 
-        // Asegurarse de que la potencia del taco no exceda el valor máximo
+        // Asegurarse de que la potencia del taco no exceda el valor mÃ¡ximo
         cue.power = Math.min(Math.sqrt(dx * dx + dy * dy) * 0.1, cuePower);
       }
     }
 
     function handleTouchStart(event) {
-      event.preventDefault(); // Prevenir el comportamiento de scroll en dispositivos móviles
+      event.preventDefault(); // Prevenir el comportamiento de scroll en dispositivos mÃ³viles
       if (areAllBallsStationary()) {
         cue.isShooting = true;
       }
@@ -158,22 +174,54 @@ export default function App() {
         if (ball.x + ball.radius > canvas.width) {
           ball.x = canvas.width - ball.radius;
           ball.vx = -ball.vx * 0.9;
-          if (ball === balls[0]) bandsTouched.add('right');
+          if (ball === balls[0] && !bandsTouched.has('right')) {
+            bandsTouched.add('right');
+            // Encender el borde derecho y establecer el temporizador
+            borderColor.current.right = '#FFFFFF';
+            if (borderTimeouts.current.right) clearTimeout(borderTimeouts.current.right);
+            borderTimeouts.current.right = setTimeout(() => {
+              borderColor.current.right = '#8b5e3c';
+            }, 5000);
+          }
         }
         if (ball.x - ball.radius < 0) {
           ball.x = ball.radius;
           ball.vx = -ball.vx * 0.9;
-          if (ball === balls[0]) bandsTouched.add('left');
+          if (ball === balls[0] && !bandsTouched.has('left')) {
+            bandsTouched.add('left');
+            // Encender el borde izquierdo y establecer el temporizador
+            borderColor.current.left = '#FFFFFF';
+            if (borderTimeouts.current.left) clearTimeout(borderTimeouts.current.left);
+            borderTimeouts.current.left = setTimeout(() => {
+              borderColor.current.left = '#8b5e3c';
+            }, 5000);
+          }
         }
         if (ball.y + ball.radius > canvas.height) {
           ball.y = canvas.height - ball.radius;
           ball.vy = -ball.vy * 0.9;
-          if (ball === balls[0]) bandsTouched.add('bottom');
+          if (ball === balls[0] && !bandsTouched.has('bottom')) {
+            bandsTouched.add('bottom');
+            // Encender el borde inferior y establecer el temporizador
+            borderColor.current.bottom = '#FFFFFF';
+            if (borderTimeouts.current.bottom) clearTimeout(borderTimeouts.current.bottom);
+            borderTimeouts.current.bottom = setTimeout(() => {
+              borderColor.current.bottom = '#8b5e3c';
+            }, 5000);
+          }
         }
         if (ball.y - ball.radius < 0) {
           ball.y = ball.radius;
           ball.vy = -ball.vy * 0.9;
-          if (ball === balls[0]) bandsTouched.add('top');
+          if (ball === balls[0] && !bandsTouched.has('top')) {
+            bandsTouched.add('top');
+            // Encender el borde superior y establecer el temporizador
+            borderColor.current.top = '#FFFFFF';
+            if (borderTimeouts.current.top) clearTimeout(borderTimeouts.current.top);
+            borderTimeouts.current.top = setTimeout(() => {
+              borderColor.current.top = '#8b5e3c';
+            }, 5000);
+          }
         }
       });
 
@@ -194,12 +242,22 @@ export default function App() {
         if (bandsTouched.size >= 3 && ballsHit.size >= 1) {
           setCaromCount(prevCount => prevCount + 1);
         }
-        // Reiniciar las listas de bandas tocadas y bolas golpeadas después de una carambola
+        // Reiniciar las listas de bandas tocadas y bolas golpeadas despuÃ©s de una carambola
         bandsTouched.clear();
         ballsHit.clear();
       }
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Dibujar bandas con los colores dinÃ¡micos
+      ctx.fillStyle = borderColor.current.top;
+      ctx.fillRect(0, 0, canvas.width, 10); // Borde superior
+      ctx.fillStyle = borderColor.current.bottom;
+      ctx.fillRect(0, canvas.height - 10, canvas.width, 10); // Borde inferior
+      ctx.fillStyle = borderColor.current.left;
+      ctx.fillRect(0, 0, 10, canvas.height); // Borde izquierdo
+      ctx.fillStyle = borderColor.current.right;
+      ctx.fillRect(canvas.width - 10, 0, 10, canvas.height); // Borde derecho
 
       // Dibujar bolas
       balls.forEach(ball => {
@@ -210,11 +268,11 @@ export default function App() {
         ctx.closePath();
       });
 
-      // Dibujar el palito de dirección
+      // Dibujar el palito de direcciÃ³n
       if (cue.isShooting) {
         const arrowLength = 100;
-        const arrowEndX = balls[0].x - Math.cos(cue.angle) * arrowLength; // Invertir dirección
-        const arrowEndY = balls[0].y - Math.sin(cue.angle) * arrowLength; // Invertir dirección
+        const arrowEndX = balls[0].x - Math.cos(cue.angle) * arrowLength; // Invertir direcciÃ³n
+        const arrowEndY = balls[0].y - Math.sin(cue.angle) * arrowLength; // Invertir direcciÃ³n
 
         ctx.beginPath();
         ctx.moveTo(balls[0].x, balls[0].y);
