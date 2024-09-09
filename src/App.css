@@ -22,23 +22,35 @@ canvas {
   object-fit: contain;
 }
 
-.indicator {
+.border {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  color: white;
-  font-size: 18px;
-  font-weight: bold;
+  height: 10px;
+  background-color: transparent;
+  transition: background-color 0.5s;
 }
 
-.animation {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 48px;
-  color: yellow;
-  font-weight: bold;
-  opacity: 0;
-  transition: opacity 0.5s ease-out;
+.top {
+  top: 0;
+  width: 100%;
+}
+
+.bottom {
+  bottom: 0;
+  width: 100%;
+}
+
+.left {
+  left: 0;
+  height: 100%;
+  width: 10px;
+}
+
+.right {
+  right: 0;
+  height: 100%;
+  width: 10px;
+}
+
+.border.active {
+  background-color: white;
 }
